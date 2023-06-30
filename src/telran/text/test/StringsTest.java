@@ -2,11 +2,21 @@ package telran.text.test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+
 import org.junit.jupiter.api.Test;
 
 import telran.text.Strings;
 
 class StringsTest {
+	double eps = 0.000001;
+	HashMap<String, Double> mapVariables = new HashMap<>();
+	{
+	mapVariables.put("aa1", 11.11);
+	mapVariables.put("bb2", 22.22);
+	mapVariables.put("cc3", 33.33);
+	}
 
 	@Test
 	void test() {
@@ -125,6 +135,8 @@ class StringsTest {
 		assertFalse(Strings.isArithmeticExpression(" 12/3&4"));
 		assertFalse(Strings.isArithmeticExpression(" 12+20-"));
 		assertFalse(Strings.isArithmeticExpression(" 12/ 18 + 100 10"));
+		assertTrue(Strings.isArithmeticExpression("13.2 / 2.2"));
+		assertTrue(Strings.isArithmeticExpression("1481.1852 / 22.22"));
 		
 	}
 	@Test
@@ -133,9 +145,35 @@ class StringsTest {
 		assertEquals(2, Strings.computeExpression(" 12/ 6"));
 		assertEquals(6, Strings.computeExpression("12/2"));
 		assertEquals(1008, Strings.computeExpression(" 12*  2 / 3 + 1000 "));
-		assertEquals(0, Strings.computeExpression(" 120 / 50 + 100 - 2 * 3 / 500 "));
+		assertEquals(0.6024, Strings.computeExpression(" 120 / 50 + 100 - 2 * 3 / 500 "));
 		assertThrowsExactly(IllegalArgumentException.class,
 				() -> Strings.computeExpression(" 12/ 18 + 100 10"));
+		assertTrue(6 - Strings.computeExpression("13.2 / 2.2") < eps);
+		assertTrue(66.66 - Strings.computeExpression("1481.1852 / 22.22") < eps);
+	}
+	
+	@Test
+	void computeVariablesExpressionTest() {
+		assertEquals(
+				Strings.computeExpression("cc3", mapVariables),
+				Strings.computeExpression("aa1 + bb2", mapVariables)
+				);
+		assertEquals(
+				1.5,
+				Strings.computeExpression("cc3 / bb2", mapVariables)
+				);
+		assertEquals(
+				Strings.computeExpression("33.33", mapVariables),
+				Strings.computeExpression("aa1 + bb2", mapVariables)
+				);
+		assertEquals(
+				Strings.computeExpression("33.33", mapVariables),
+				Strings.computeExpression("11.11 + 22.22", mapVariables)
+				);
+		assertThrowsExactly(NoSuchElementException.class,
+				() -> Strings.computeExpression("dd + ee", mapVariables));
+		assertThrowsExactly(IllegalArgumentException.class,
+				() -> Strings.computeExpression("1aa + 100", mapVariables));
 	}
 
 }
