@@ -10,45 +10,17 @@ import org.junit.jupiter.api.Test;
 import telran.text.Strings;
 
 class StringsTest {
-	double eps = 0.000001;
-	HashMap<String, Double> mapVariables = new HashMap<>();
-	{
-	mapVariables.put("aa1", 11.11);
-	mapVariables.put("bb2", 22.22);
-	mapVariables.put("cc3", 33.33);
-	}
-
-	@Test
-	void test() {
-		//String regex = "gray|grey|griy";
-//		String regex = "gr(a|e|i)y";
-//		assertTrue("gray".matches(regex));
-//		assertTrue("grey".matches(regex));
-//		assertTrue("griy".matches(regex));
-//		assertFalse("groy".matches(regex));
-//		String regex = "a?1234";
-//		assertTrue("1234".matches(regex));
-//		assertTrue("a1234".matches(regex));
-//		assertFalse("b1234".matches(regex));
-//		assertFalse("aa1234".matches(regex));
-//		String regex = "a*1234";
-//		assertTrue("1234".matches(regex));
-//		assertTrue("a1234".matches(regex));
-//		assertFalse("b1234".matches(regex));
-//		assertTrue("aa1234".matches(regex));
-//		String regex = "a+1234";
-//		assertFalse("1234".matches(regex));
-//		assertTrue("a1234".matches(regex));
-//		assertFalse("b1234".matches(regex));
-//		assertTrue("aa1234".matches(regex));
-//		String regex = "(a|b)+1234";
-//		assertFalse("1234".matches(regex));
-//		assertTrue("a1234".matches(regex));
-//		assertTrue("b1234".matches(regex));
-//		assertTrue("aa1234".matches(regex));
+static HashMap<String, Double> mapVariables;
+static {
+	mapVariables = new HashMap<>();
+	mapVariables.put("abc", 6.0);
+	mapVariables.put("a1", 1000.0);
+	mapVariables.put("a2", 60.0);
+}
+	
 		
 		
-	}
+	
 	@Test
 	void javaVariableNameTest() {
 		String regex = Strings.javaVariableName();
@@ -127,53 +99,28 @@ class StringsTest {
 	@Test
 	void arithmeticExpressionTest() {
 		assertTrue(Strings.isArithmeticExpression(" 12 "));//12
-		assertTrue(Strings.isArithmeticExpression(" 12/ 6"));//2
+		assertTrue(Strings.isArithmeticExpression(" 12/ abc"));//abc = 6
 		assertTrue(Strings.isArithmeticExpression("12/2"));//6
-		assertTrue(Strings.isArithmeticExpression(" 12*  2 / 3 + 1000 "));//1008
-		assertTrue(Strings.isArithmeticExpression(" 120 / 50 + 100 - 2 * 3 / 500 "));//0
+		assertTrue(Strings.isArithmeticExpression(" 12*  2 / 3 + a1 "));//a1 = 1000
+		assertTrue(Strings.isArithmeticExpression(" 120 / a2 + 100 - 2 * 2.5 / 500 "));//a2=60
 		assertFalse(Strings.isArithmeticExpression(" 12 18"));
 		assertFalse(Strings.isArithmeticExpression(" 12/3&4"));
 		assertFalse(Strings.isArithmeticExpression(" 12+20-"));
 		assertFalse(Strings.isArithmeticExpression(" 12/ 18 + 100 10"));
-		assertTrue(Strings.isArithmeticExpression("13.2 / 2.2"));
-		assertTrue(Strings.isArithmeticExpression("1481.1852 / 22.22"));
+		assertFalse(Strings.isArithmeticExpression(" 12/ 18 + 100 + 1v"));
 		
 	}
 	@Test
 	void computeExpressionTest() {
-		assertEquals(12, Strings.computeExpression(" 12 "));
-		assertEquals(2, Strings.computeExpression(" 12/ 6"));
-		assertEquals(6, Strings.computeExpression("12/2"));
-		assertEquals(1008, Strings.computeExpression(" 12*  2 / 3 + 1000 "));
-		assertEquals(0.6024, Strings.computeExpression(" 120 / 50 + 100 - 2 * 3 / 500 "));
+		assertEquals(12, Strings.computeExpression(" 12 ", mapVariables));
+		assertEquals(2, Strings.computeExpression(" 12/ 6", mapVariables));
+		assertEquals(6, Strings.computeExpression("12/2", mapVariables));
+		assertEquals(1008, Strings.computeExpression(" 12*  2 / 3 + 1000 ", mapVariables));
+		assertEquals(0.5, Strings.computeExpression(" 120 / a2 + 100 - 2 * 2.5 / 500 ", mapVariables));
 		assertThrowsExactly(IllegalArgumentException.class,
-				() -> Strings.computeExpression(" 12/ 18 + 100 10"));
-		assertTrue(6 - Strings.computeExpression("13.2 / 2.2") < eps);
-		assertTrue(66.66 - Strings.computeExpression("1481.1852 / 22.22") < eps);
-	}
-	
-	@Test
-	void computeVariablesExpressionTest() {
-		assertEquals(
-				Strings.computeExpression("cc3", mapVariables),
-				Strings.computeExpression("aa1 + bb2", mapVariables)
-				);
-		assertEquals(
-				1.5,
-				Strings.computeExpression("cc3 / bb2", mapVariables)
-				);
-		assertEquals(
-				Strings.computeExpression("33.33", mapVariables),
-				Strings.computeExpression("aa1 + bb2", mapVariables)
-				);
-		assertEquals(
-				Strings.computeExpression("33.33", mapVariables),
-				Strings.computeExpression("11.11 + 22.22", mapVariables)
-				);
-		assertThrowsExactly(NoSuchElementException.class,
-				() -> Strings.computeExpression("dd + ee", mapVariables));
-		assertThrowsExactly(IllegalArgumentException.class,
-				() -> Strings.computeExpression("1aa + 100", mapVariables));
+				() -> Strings.computeExpression(" 12/ 18 + 100 10", mapVariables));
+		assertThrowsExactly(NoSuchElementException.class, () ->
+		Strings.computeExpression(" 12/ 18 + 100-a15", mapVariables));
 	}
 
 }
